@@ -1,5 +1,4 @@
 package com.example.demo.queue;
-​
 import java.time.LocalDateTime;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -10,39 +9,29 @@ import com.example.demo.service.EmailService;
 import com.example.demo.utils.StandardJsonResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-​
+
 @Component
 public class RabbitMQReceiver {
-​
 	protected final Log logger = LogFactory.getLog(getClass());
 	private static final String Email_Subject = "Account Balance Information";
 	private static final String Email_To = "rimi.ank@gmail.com";
-​
+
 	@Autowired
 	private EmailService emailService;
-​
 	@RabbitListener(queues = "${truist.rabbitmq.queue}")
 	public void recievedMessage(StandardJsonResponse response) {
 		logger.info("Recieved Message From RabbitMQ: " + response.getData());
-​
 		LocalDateTime date = LocalDateTime.now();
 		ObjectMapper objectMapper = new ObjectMapper();
 		try {
 			String jsonString = "Available balance in your account is :: " +" Rs."
 					+ objectMapper.writeValueAsString(response.getData().get("balance")) + " as on  : " + date.toString();
 			logger.info("Attempting to send email with updated balance info :: " + jsonString);
-​
 			emailService.sendMail(Email_To, Email_Subject, jsonString);
-​
 			logger.info("Email sent succesfully!!");
-​
 		} catch (JsonProcessingException e) {
-​
 			logger.info("Error occured on sending email:: " + e.getLocalizedMessage());
-​
 			e.printStackTrace();
 		}
-​
 	}
-​
 }
